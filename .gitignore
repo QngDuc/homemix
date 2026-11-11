@@ -26,6 +26,18 @@ migrate_working_dir/
 .env.*
 !.env.example
 
+# Private keys and signing credentials
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+**/key.properties
+**/serviceAccountKey.json
+**/*-firebase-adminsdk-*.json
+**/*service-account*.json
+
 # Flutter/Dart/Pub related
 **/doc/api/
 **/ios/Flutter/.last_build_id
