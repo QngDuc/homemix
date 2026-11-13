@@ -27,6 +27,8 @@ migrate_working_dir/
 !.env.example
 /lib/firebase_options.dart
 /android/app/google-services.json
+/ios/Runner/GoogleService-Info.plist
+/ios/firebase_app_id_file.json
 
 # Private keys and signing credentials
 *.key
@@ -44,10 +46,13 @@ migrate_working_dir/
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/
+.packages
+.flutter-plugins
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
 /build/
+**/build/
 /coverage/
 
 # Symbolication related

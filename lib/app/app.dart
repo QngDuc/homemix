@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class MainApp extends StatelessWidget {
+import 'router/app_router.dart';
+import 'theme/app_theme.dart';
+
+class MainApp extends ConsumerWidget {
   const MainApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(body: Center(child: Text('Hello World!'))),
+  Widget build(BuildContext context, WidgetRef ref) {
+    return MaterialApp.router(
+      title: 'HomeMix',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light,
+      routerConfig: ref.watch(appRouterProvider),
     );
   }
 }
