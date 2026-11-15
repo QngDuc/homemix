@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:homemix/app/app.dart';
 import 'package:homemix/app/router/app_router.dart';
 
+import '../../support/auth_test_setup.dart';
 import '../../support/journal_storage_test_setup.dart';
 
 void main() {
@@ -15,7 +16,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(390, 844));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await tester.pumpWidget(const ProviderScope(child: MainApp()));
+    await tester.pumpWidget(testMainApp());
     await tester.pumpAndSettle();
 
     expect(find.text('Trà đào cam sả'), findsWidgets);
@@ -40,7 +41,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(390, 844));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await tester.pumpWidget(const ProviderScope(child: MainApp()));
+    await tester.pumpWidget(testMainApp());
     await tester.pumpAndSettle();
 
     final container = ProviderScope.containerOf(
@@ -54,7 +55,10 @@ void main() {
     expect(find.text('Mojito không cồn'), findsWidgets);
     expect(find.text('Nguyên liệu'), findsOneWidget);
     expect(find.text('4 món cần có'), findsOneWidget);
-    expect(find.byKey(const ValueKey('discover-practice-button')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('discover-practice-button')),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -64,7 +68,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(390, 844));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await tester.pumpWidget(const ProviderScope(child: MainApp()));
+    await tester.pumpWidget(testMainApp());
     await tester.pumpAndSettle();
 
     final favoriteButton = find.byTooltip('Thêm vào yêu thích').first;
@@ -82,7 +86,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(320, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await tester.pumpWidget(const ProviderScope(child: MainApp()));
+    await tester.pumpWidget(testMainApp());
     await tester.pumpAndSettle();
 
     expect(find.text('Trang chủ'), findsOneWidget);

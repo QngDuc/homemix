@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../domain/entities/drink_recipe.dart';
 import '../../../core/widgets/feature_state.dart';
+import '../../auth/presentation/providers/auth_provider.dart';
 import '../providers/discover_providers.dart';
 import '../widgets/recipe_card.dart';
 
@@ -160,11 +164,11 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
   }
 }
 
-class _WelcomeHeader extends StatelessWidget {
+class _WelcomeHeader extends ConsumerWidget {
   const _WelcomeHeader();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -203,10 +207,28 @@ class _WelcomeHeader extends StatelessWidget {
                 ),
               ),
             ),
-            CircleAvatar(
-              radius: 20,
-              backgroundImage: const AssetImage(
-                'assets/images/figma/profile_avatar.png',
+            PopupMenuButton<String>(
+              tooltip: 'Tài khoản',
+              onSelected: (action) {
+                if (action == 'logout') unawaited(_signOut(context, ref));
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem(
+                  value: 'logout',
+                  child: Row(
+                    children: [
+                      Icon(Icons.logout_rounded, size: 18),
+                      SizedBox(width: 10),
+                      Text('Đăng xuất'),
+                    ],
+                  ),
+                ),
+              ],
+              child: const CircleAvatar(
+                radius: 20,
+                backgroundImage: AssetImage(
+                  'assets/images/figma/profile_avatar.png',
+                ),
               ),
             ),
           ],
@@ -227,6 +249,16 @@ class _WelcomeHeader extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+Future<void> _signOut(BuildContext context, WidgetRef ref) async {
+  try {
+    await ref.read(authRepositoryProvider).logout();
+  } on FirebaseAuthException catch (error) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
   }
 }
 

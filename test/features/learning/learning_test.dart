@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:homemix/app/app.dart';
 import 'package:homemix/features/learning/data/shared_preferences_learning_progress_repository.dart';
 import 'package:homemix/features/learning/domain/learning_progress.dart';
 import 'package:homemix/features/learning/domain/learning_progress_repository.dart';
@@ -9,6 +7,7 @@ import 'package:homemix/features/learning/providers/learning_providers.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 
+import '../../support/auth_test_setup.dart';
 import '../../support/journal_storage_test_setup.dart';
 
 void main() {
@@ -25,13 +24,12 @@ void main() {
     final progressRepository = _MemoryLearningProgressRepository();
 
     await tester.pumpWidget(
-      ProviderScope(
+      testMainApp(
         overrides: [
           learningProgressRepositoryProvider.overrideWithValue(
             progressRepository,
           ),
         ],
-        child: const MainApp(),
       ),
     );
     await tester.pumpAndSettle();

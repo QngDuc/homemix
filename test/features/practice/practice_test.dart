@@ -5,6 +5,7 @@ import 'package:homemix/app/app.dart';
 import 'package:homemix/app/router/app_router.dart';
 import 'package:homemix/features/journal/providers/journal_providers.dart';
 
+import '../../support/auth_test_setup.dart';
 import '../../support/journal_storage_test_setup.dart';
 
 void main() {
@@ -14,7 +15,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(390, 844));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await tester.pumpWidget(const ProviderScope(child: MainApp()));
+    await tester.pumpWidget(testMainApp());
     await tester.pumpAndSettle();
     final recipe = find.text('Trà đào cam sả').first;
     await tester.ensureVisible(recipe);
@@ -42,7 +43,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(320, 844));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await tester.pumpWidget(const ProviderScope(child: MainApp()));
+    await tester.pumpWidget(testMainApp());
     await tester.pumpAndSettle();
     await _openPractice(tester);
 
@@ -173,7 +174,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(320, 844));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await tester.pumpWidget(const ProviderScope(child: MainApp()));
+    await tester.pumpWidget(testMainApp());
     await tester.pumpAndSettle();
     await _openPractice(tester);
 

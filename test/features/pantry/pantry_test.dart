@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:homemix/app/app.dart';
 
+import '../../support/auth_test_setup.dart';
 import '../../support/journal_storage_test_setup.dart';
 
 void main() {
@@ -15,7 +14,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(390, 844));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await tester.pumpWidget(const ProviderScope(child: MainApp()));
+    await tester.pumpWidget(testMainApp());
     await tester.pumpAndSettle();
     expect(find.text('Bạn muốn pha món gì hôm nay?'), findsOneWidget);
 
@@ -41,7 +40,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(390, 844));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await tester.pumpWidget(const ProviderScope(child: MainApp()));
+    await tester.pumpWidget(testMainApp());
     await tester.pumpAndSettle();
     await tester.tap(find.text('Nguyên liệu').last);
     await tester.pumpAndSettle();
@@ -131,7 +130,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(320, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await tester.pumpWidget(const ProviderScope(child: MainApp()));
+    await tester.pumpWidget(testMainApp());
     await tester.pumpAndSettle();
     await tester.tap(find.text('Nguyên liệu').last);
     await tester.pumpAndSettle();
