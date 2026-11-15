@@ -11,6 +11,7 @@ import '../../features/learning/presentation/learning_screen.dart';
 import '../../features/learning/presentation/lesson_screen.dart';
 import '../../features/mix_now/presentation/mix_now_screen.dart';
 import '../../features/mix_now/presentation/mix_recipe_detail_screen.dart';
+import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/pantry/presentation/pantry_screen.dart';
 import '../../features/practice/presentation/practice_screen.dart';
 import '../../features/practice/presentation/practice_session_screen.dart';
@@ -19,6 +20,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
     initialLocation: '/discover',
     routes: [
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             HomeShell(navigationShell: navigationShell),

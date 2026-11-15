@@ -16,13 +16,10 @@ void main() {
 
       await tester.pumpWidget(const ProviderScope(child: MainApp()));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Mix Now'));
+      await tester.tap(find.text('Pha ngay').last);
       await tester.pumpAndSettle();
 
-      expect(
-        find.text('8 nguyên liệu trong Pantry · 0 món pha ngay'),
-        findsOneWidget,
-      );
+      expect(find.text('Có sẵn 8 nguyên liệu · 0 pha ngay'), findsOneWidget);
       final mojito = find.text('Mojito không cồn');
       await tester.ensureVisible(mojito);
       await tester.pumpAndSettle();
@@ -32,12 +29,12 @@ void main() {
       expect(
         find.descendant(
           of: mojitoCard,
-          matching: find.text('25% nguyên liệu có sẵn'),
+          matching: find.text('1/4 nguyên liệu · 25%'),
         ),
         findsOneWidget,
       );
 
-      await tester.tap(find.text('Pantry').last);
+      await tester.tap(find.text('Nguyên liệu').last);
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('pantry-add-button')));
       await tester.pumpAndSettle();
@@ -56,12 +53,9 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('pantry-save-button')));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Mix Now'));
+      await tester.tap(find.text('Pha ngay').last);
       await tester.pumpAndSettle();
-      expect(
-        find.text('9 nguyên liệu trong Pantry · 0 món pha ngay'),
-        findsOneWidget,
-      );
+      expect(find.text('Có sẵn 9 nguyên liệu · 0 pha ngay'), findsOneWidget);
       final updatedMojito = find.text('Mojito không cồn');
       await tester.ensureVisible(updatedMojito);
       await tester.pumpAndSettle();
@@ -71,24 +65,21 @@ void main() {
       expect(
         find.descendant(
           of: updatedMojitoCard,
-          matching: find.text('50% nguyên liệu có sẵn'),
+          matching: find.text('2/4 nguyên liệu · 50%'),
         ),
         findsOneWidget,
       );
 
-      await tester.tap(find.text('Pantry').last);
+      await tester.tap(find.text('Nguyên liệu').last);
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Xóa Chanh xanh'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Xóa').last);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Mix Now'));
+      await tester.tap(find.text('Pha ngay').last);
       await tester.pumpAndSettle();
 
-      expect(
-        find.text('8 nguyên liệu trong Pantry · 0 món pha ngay'),
-        findsOneWidget,
-      );
+      expect(find.text('Có sẵn 8 nguyên liệu · 0 pha ngay'), findsOneWidget);
       final restoredMojito = find.text('Mojito không cồn');
       await tester.ensureVisible(restoredMojito);
       await tester.pumpAndSettle();
@@ -98,7 +89,7 @@ void main() {
       expect(
         find.descendant(
           of: restoredMojitoCard,
-          matching: find.text('25% nguyên liệu có sẵn'),
+          matching: find.text('1/4 nguyên liệu · 25%'),
         ),
         findsOneWidget,
       );
@@ -113,9 +104,11 @@ void main() {
 
       await tester.pumpWidget(const ProviderScope(child: MainApp()));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Mix Now'));
+      await tester.tap(find.text('Pha ngay').last);
       await tester.pumpAndSettle();
 
+      await tester.tap(find.byKey(const ValueKey('mix-search-toggle')));
+      await tester.pumpAndSettle();
       await tester.enterText(
         find.byKey(const ValueKey('mix-search-field')),
         'mojito',
@@ -126,18 +119,20 @@ void main() {
 
       await tester.tap(find.byTooltip('Xóa tìm kiếm'));
       await tester.pumpAndSettle();
-      final categories = find.byKey(const ValueKey('mix-category-list'));
-      await tester.drag(categories, const Offset(-300, 0));
-      await tester.pumpAndSettle();
-      final mocktailFilter = find.byKey(
-        const ValueKey('mix-category-Mocktail'),
+      final readyFilter = find.byKey(
+        const ValueKey('mix-category-Pha được ngay'),
       );
-      await tester.ensureVisible(mocktailFilter);
+      await tester.tap(readyFilter);
       await tester.pumpAndSettle();
-      await tester.tap(mocktailFilter);
+      expect(find.text('Chưa có gợi ý phù hợp'), findsOneWidget);
+
+      final missingFilter = find.byKey(
+        const ValueKey('mix-category-Thiếu nguyên liệu'),
+      );
+      await tester.tap(missingFilter);
       await tester.pumpAndSettle();
       expect(find.text('Mojito không cồn'), findsOneWidget);
-      expect(find.text('Cà phê sữa đá'), findsNothing);
+      expect(find.text('Cà phê sữa đá'), findsOneWidget);
 
       await tester.tap(find.text('Mojito không cồn'));
       await tester.pumpAndSettle();

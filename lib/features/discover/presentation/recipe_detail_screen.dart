@@ -4,10 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../core/widgets/feature_state.dart';
+import '../../../domain/entities/drink_recipe.dart';
 import '../providers/discover_providers.dart';
 import '../../journal/widgets/favorite_recipe_button.dart';
 import '../widgets/drink_artwork.dart';
-import '../widgets/recipe_card.dart';
 
 class RecipeDetailScreen extends ConsumerWidget {
   const RecipeDetailScreen({required this.recipeId, super.key});
@@ -19,7 +19,7 @@ class RecipeDetailScreen extends ConsumerWidget {
     final recipes = ref.watch(recipesProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: AppColors.white,
       body: SafeArea(
         child: recipes.when(
           loading: () =>
@@ -43,119 +43,61 @@ class RecipeDetailScreen extends ConsumerWidget {
                 SliverToBoxAdapter(
                   child: Center(
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 760),
+                      constraints: const BoxConstraints(maxWidth: 393),
+                      child: _RecipeHero(recipe: recipe),
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 393),
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            _RecipeFacts(recipe: recipe),
+                            const SizedBox(height: 24),
                             Row(
                               children: [
-                                IconButton(
-                                  onPressed: () => context.pop(),
-                                  style: IconButton.styleFrom(
-                                    backgroundColor: AppColors.white,
+                                Expanded(
+                                  child: Text(
+                                    'Nguyên liệu',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleLarge,
                                   ),
-                                  icon: const Icon(Icons.arrow_back_rounded),
                                 ),
-                                const Spacer(),
-                                FavoriteRecipeButton(
-                                  recipeId: recipe.id,
-                                  backgroundColor: AppColors.white,
+                                Text(
+                                  '${recipe.ingredients.length} món cần có',
+                                  style: Theme.of(context).textTheme.bodySmall,
                                 ),
                               ],
                             ),
                             const SizedBox(height: 10),
-                            SizedBox(
-                              height: 230,
-                              width: double.infinity,
-                              child: DrinkArtwork(style: recipe.artwork),
-                            ),
-                            const SizedBox(height: 20),
-                            RecipeCategoryBadge(label: recipe.category.label),
-                            const SizedBox(height: 10),
-                            Text(
-                              recipe.name,
-                              style: Theme.of(context).textTheme.headlineMedium,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              recipe.description,
-                              style: Theme.of(context).textTheme.bodyLarge
-                                  ?.copyWith(
-                                    color: AppColors.muted,
-                                    height: 1.5,
-                                  ),
-                            ),
-                            const SizedBox(height: 17),
-                            Wrap(
-                              spacing: 9,
-                              runSpacing: 9,
-                              children: [
-                                _InfoPill(
-                                  icon: Icons.schedule_rounded,
-                                  label: '${recipe.minutes} phút',
-                                ),
-                                _InfoPill(
-                                  icon: Icons.signal_cellular_alt_rounded,
-                                  label: recipe.difficulty,
-                                ),
-                                _InfoPill(
-                                  icon: Icons.local_drink_outlined,
-                                  label: '${recipe.servings} khẩu phần',
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 27),
-                            Text(
-                              'Nguyên liệu',
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
-                            const SizedBox(height: 12),
-                            _DetailCard(
-                              child: Column(
-                                children: [
-                                  for (
-                                    var index = 0;
-                                    index < recipe.ingredients.length;
-                                    index++
-                                  ) ...[
-                                    if (index > 0) const Divider(height: 20),
-                                    Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.check_circle_rounded,
-                                          color: AppColors.green,
-                                          size: 19,
+                            LayoutBuilder(
+                              builder: (context, constraints) {
+                                final tileWidth =
+                                    (constraints.maxWidth - 32) / 3;
+                                return Wrap(
+                                  spacing: 16,
+                                  runSpacing: 4,
+                                  children: [
+                                    for (final ingredient in recipe.ingredients)
+                                      SizedBox(
+                                        width: tileWidth,
+                                        height: 96,
+                                        child: _RecipeIngredientTile(
+                                          name: ingredient.name,
+                                          amount: ingredient.formattedAmount,
                                         ),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: Text(
-                                            recipe.ingredients[index].name,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodyLarge,
-                                          ),
-                                        ),
-                                        Text(
-                                          recipe
-                                              .ingredients[index]
-                                              .formattedAmount,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium
-                                              ?.copyWith(
-                                                color: AppColors.navy,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
+                                      ),
                                   ],
-                                ],
-                              ),
+                                );
+                              },
                             ),
-                            const SizedBox(height: 26),
+                            const SizedBox(height: 24),
                             Text(
                               'Cách pha',
                               style: Theme.of(context).textTheme.titleLarge,
@@ -172,26 +114,6 @@ class RecipeDetailScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 10),
                             ],
-                            const SizedBox(height: 10),
-                            SizedBox(
-                              width: double.infinity,
-                              child: FilledButton.icon(
-                                key: const ValueKey('discover-practice-button'),
-                                onPressed: () =>
-                                    context.go('/practice/recipe/${recipe.id}'),
-                                icon: const Icon(Icons.play_arrow_rounded),
-                                label: const Text('Bắt đầu pha'),
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: AppColors.coral,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 15,
-                                  ),
-                                  textStyle: const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                            ),
                           ],
                         ),
                       ),
@@ -203,34 +125,263 @@ class RecipeDetailScreen extends ConsumerWidget {
           },
         ),
       ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 393),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: FilledButton(
+                      key: const ValueKey('discover-practice-button'),
+                      onPressed: () => context.go('/practice/recipe/$recipeId'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.navy,
+                        foregroundColor: AppColors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(28),
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Bắt đầu pha'),
+                          Icon(Icons.arrow_forward_rounded),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Vài bước đơn giản. Một ly mát lành.',
+                    style: TextStyle(color: AppColors.muted, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
 
-class _InfoPill extends StatelessWidget {
-  const _InfoPill({required this.icon, required this.label});
+class _RecipeHero extends StatelessWidget {
+  const _RecipeHero({required this.recipe});
 
-  final IconData icon;
-  final String label;
+  final DrinkRecipe recipe;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: AppColors.coral),
-            const SizedBox(width: 6),
-            Text(label, style: Theme.of(context).textTheme.bodyMedium),
-          ],
+    return SizedBox(
+      height: 388,
+      width: double.infinity,
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
+        child: ColoredBox(
+          color: AppColors.cream,
+          child: Stack(
+            children: [
+              Positioned(
+                top: 144,
+                left: 76,
+                width: 241,
+                height: 232,
+                child: DrinkArtwork(
+                  style: recipe.artwork,
+                  backgroundColor: AppColors.cream,
+                ),
+              ),
+              Positioned(
+                top: 32,
+                left: 24,
+                child: IconButton(
+                  tooltip: 'Quay lại',
+                  onPressed: () => context.pop(),
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppColors.white,
+                    fixedSize: const Size(40, 40),
+                  ),
+                  icon: const Icon(Icons.arrow_back_rounded),
+                ),
+              ),
+              Positioned(
+                top: 34,
+                right: 24,
+                child: FavoriteRecipeButton(
+                  recipeId: recipe.id,
+                  backgroundColor: AppColors.white,
+                ),
+              ),
+              Positioned(
+                top: 37,
+                left: 80,
+                width: 233,
+                child: Text(
+                  recipe.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.navy,
+                    fontSize: 21,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 92,
+                left: 28,
+                right: 28,
+                child: Text(
+                  recipe.description,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+              if (recipe.category == DrinkCategory.mocktail)
+                Positioned(
+                  left: 134,
+                  bottom: 12,
+                  child: Container(
+                    width: 125,
+                    height: 24,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEDF3DF),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      '100% không cồn',
+                      style: TextStyle(color: Color(0xFF4B6F20), fontSize: 11),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+}
+
+class _RecipeFacts extends StatelessWidget {
+  const _RecipeFacts({required this.recipe});
+
+  final DrinkRecipe recipe;
+
+  @override
+  Widget build(BuildContext context) {
+    final facts = [
+      ('${recipe.minutes} phút', 'Chuẩn bị'),
+      (recipe.difficulty, 'Độ khó'),
+      (
+        recipe.category == DrinkCategory.mocktail
+            ? 'Thanh mát'
+            : recipe.category.label,
+        'Nhóm',
+      ),
+      ('${recipe.servings}', 'Khẩu phần'),
+    ];
+
+    return Row(
+      children: [
+        for (final (value, label) in facts)
+          Expanded(
+            child: Column(
+              children: [
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.navy,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _RecipeIngredientTile extends StatelessWidget {
+  const _RecipeIngredientTile({required this.name, required this.amount});
+
+  final String name;
+  final String amount;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalized = name.toLowerCase();
+    final imagePath = normalized.contains('bạc hà')
+        ? 'assets/images/figma/ingredient_mint.png'
+        : normalized.contains('chanh')
+        ? 'assets/images/figma/ingredient_lemon.png'
+        : normalized.contains('soda')
+        ? 'assets/images/figma/ingredient_soda.png'
+        : normalized.contains('đá')
+        ? 'assets/images/figma/ingredient_ice.png'
+        : normalized.contains('đường')
+        ? 'assets/images/figma/ingredient_sugar.png'
+        : null;
+
+    return Column(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: imagePath == null
+                ? ColoredBox(
+                    color: AppColors.cream,
+                    child: const Icon(
+                      Icons.local_cafe_rounded,
+                      color: AppColors.green,
+                    ),
+                  )
+                : Image.asset(imagePath, fit: BoxFit.cover),
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          amount,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: Color(0xFFA94A60),
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        Text(
+          name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(color: AppColors.navy, fontSize: 12),
+        ),
+      ],
     );
   }
 }

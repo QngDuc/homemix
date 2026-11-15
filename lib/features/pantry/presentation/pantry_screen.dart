@@ -18,7 +18,8 @@ class PantryScreen extends ConsumerStatefulWidget {
 class _PantryScreenState extends ConsumerState<PantryScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
-  PantryCategory? _selectedCategory;
+  Set<PantryCategory>? _selectedCategories;
+  String _selectedCategoryLabel = 'Tất cả';
 
   @override
   void dispose() {
@@ -31,7 +32,8 @@ class _PantryScreenState extends ConsumerState<PantryScreen> {
     final ingredients = ref.watch(pantryIngredientsProvider);
     final filteredIngredients = ingredients.where((ingredient) {
       final matchesCategory =
-          _selectedCategory == null || ingredient.category == _selectedCategory;
+          _selectedCategories == null ||
+          _selectedCategories!.contains(ingredient.category);
       final query = _searchQuery.toLowerCase();
       final matchesSearch =
           query.isEmpty ||
@@ -45,21 +47,15 @@ class _PantryScreenState extends ConsumerState<PantryScreen> {
               ingredient.expiryStatus == PantryExpiryStatus.expiringSoon,
         )
         .length;
-    final expiredCount = ingredients
-        .where(
-          (ingredient) => ingredient.expiryStatus == PantryExpiryStatus.expired,
-        )
-        .length;
-
     return Scaffold(
-      backgroundColor: AppColors.cream,
-      floatingActionButton: FloatingActionButton.extended(
+      backgroundColor: AppColors.white,
+      floatingActionButton: FloatingActionButton(
         key: const ValueKey('pantry-add-button'),
+        tooltip: 'Thêm nguyên liệu',
         onPressed: _addIngredient,
         backgroundColor: AppColors.coral,
         foregroundColor: AppColors.white,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Thêm nguyên liệu'),
+        child: const Icon(Icons.add_rounded),
       ),
       body: SafeArea(
         bottom: false,
@@ -67,19 +63,15 @@ class _PantryScreenState extends ConsumerState<PantryScreen> {
           key: const ValueKey('pantry-list'),
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 112),
+              padding: const EdgeInsets.fromLTRB(24, 32, 24, 112),
               sliver: SliverToBoxAdapter(
                 child: Center(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 760),
+                    constraints: const BoxConstraints(maxWidth: 393),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _PantryHeader(
-                          ingredientCount: ingredients.length,
-                          expiringCount: expiringCount,
-                          expiredCount: expiredCount,
-                        ),
+                        _PantryHeader(),
                         const SizedBox(height: 20),
                         TextField(
                           key: const ValueKey('pantry-search-field'),
@@ -105,35 +97,16 @@ class _PantryScreenState extends ConsumerState<PantryScreen> {
                                   ),
                           ),
                         ),
-                        const SizedBox(height: 19),
-                        Text(
-                          'Danh mục',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 16),
                         _CategoryFilters(
-                          selectedCategory: _selectedCategory,
-                          onSelected: (category) =>
-                              setState(() => _selectedCategory = category),
+                          selectedLabel: _selectedCategoryLabel,
+                          onSelected: _selectCategory,
                         ),
-                        const SizedBox(height: 20),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                _selectedCategory == null
-                                    ? 'Nguyên liệu của bạn'
-                                    : _selectedCategory!.label,
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-                            ),
-                            Text(
-                              '${filteredIngredients.length} món',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
+                        if (expiringCount > 0) ...[
+                          const SizedBox(height: 12),
+                          _FreshnessReminder(count: expiringCount),
+                        ],
+                        const SizedBox(height: 16),
                         if (filteredIngredients.isEmpty)
                           FeatureEmptyState(
                             title: ingredients.isEmpty
@@ -144,21 +117,39 @@ class _PantryScreenState extends ConsumerState<PantryScreen> {
                                 : 'Thử từ khóa khác hoặc chọn danh mục khác.',
                           )
                         else
-                          for (
-                            var index = 0;
-                            index < filteredIngredients.length;
-                            index++
-                          ) ...[
-                            PantryIngredientCard(
-                              ingredient: filteredIngredients[index],
-                              onEdit: () =>
-                                  _editIngredient(filteredIngredients[index]),
-                              onDelete: () =>
-                                  _confirmDelete(filteredIngredients[index]),
-                            ),
-                            if (index < filteredIngredients.length - 1)
-                              const SizedBox(height: 10),
-                          ],
+                          GridView.builder(
+                            key: const ValueKey('pantry-grid'),
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: filteredIngredients.length,
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  crossAxisSpacing: 8,
+                                  mainAxisSpacing: 8,
+                                  mainAxisExtent: 96,
+                                ),
+                            itemBuilder: (context, index) {
+                              final ingredient = filteredIngredients[index];
+                              return PantryIngredientCard(
+                                ingredient: ingredient,
+                                onEdit: () => _editIngredient(ingredient),
+                                onDelete: () => _confirmDelete(ingredient),
+                              );
+                            },
+                          ),
+                        const SizedBox(height: 18),
+                        Text(
+                          'Có ${ingredients.length} nguyên liệu trong tủ',
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'Ít nguyên liệu, nhiều cách pha.',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppColors.muted),
+                        ),
                       ],
                     ),
                   ),
@@ -169,6 +160,19 @@ class _PantryScreenState extends ConsumerState<PantryScreen> {
         ),
       ),
     );
+  }
+
+  void _selectCategory(String label) {
+    setState(() {
+      _selectedCategoryLabel = label;
+      _selectedCategories = switch (label) {
+        'Trái cây' => {PantryCategory.fruit},
+        'Sữa' => {PantryCategory.dairy},
+        'Trà & cà phê' => {PantryCategory.tea, PantryCategory.coffee},
+        'Tạo ngọt' => {PantryCategory.syrup},
+        _ => null,
+      };
+    });
   }
 
   Future<void> _addIngredient() async {
@@ -239,149 +243,76 @@ class _PantryScreenState extends ConsumerState<PantryScreen> {
 }
 
 class _PantryHeader extends StatelessWidget {
-  const _PantryHeader({
-    required this.ingredientCount,
-    required this.expiringCount,
-    required this.expiredCount,
-  });
-
-  final int ingredientCount;
-  final int expiringCount;
-  final int expiredCount;
+  const _PantryHeader();
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'GÓC BẾP CỦA BẠN',
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: AppColors.coral,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.7,
-          ),
-        ),
-        const SizedBox(height: 5),
         Row(
           children: [
             Expanded(
               child: Text(
-                'Pantry',
+                'Tủ nguyên liệu',
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
             ),
-            Container(
-              width: 46,
-              height: 46,
-              decoration: const BoxDecoration(
-                color: AppColors.pastelPink,
-                shape: BoxShape.circle,
+            Text.rich(
+              const TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'home',
+                    style: TextStyle(color: AppColors.navy),
+                  ),
+                  TextSpan(
+                    text: 'mix',
+                    style: TextStyle(color: AppColors.coral),
+                  ),
+                ],
               ),
-              child: const Icon(Icons.kitchen_rounded, color: AppColors.coral),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
             ),
           ],
         ),
-        const SizedBox(height: 5),
+        const SizedBox(height: 8),
         Text(
-          '$ingredientCount nguyên liệu đang có trong bếp',
+          'Quản lý nguyên liệu có sẵn tại nhà.',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
-        if (expiringCount > 0 || expiredCount > 0) ...[
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              if (expiringCount > 0)
-                _SummaryBadge(
-                  icon: Icons.schedule_rounded,
-                  label: '$expiringCount sắp hết hạn',
-                  color: const Color(0xFFFFF0D8),
-                  foreground: const Color(0xFFB36B25),
-                ),
-              if (expiredCount > 0)
-                _SummaryBadge(
-                  icon: Icons.error_outline_rounded,
-                  label: '$expiredCount đã hết hạn',
-                  color: const Color(0xFFFBE4E6),
-                  foreground: const Color(0xFFC65363),
-                ),
-            ],
-          ),
-        ],
       ],
-    );
-  }
-}
-
-class _SummaryBadge extends StatelessWidget {
-  const _SummaryBadge({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.foreground,
-  });
-
-  final IconData icon;
-  final String label;
-  final Color color;
-  final Color foreground;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 15, color: foreground),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: TextStyle(
-              color: foreground,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
 
 class _CategoryFilters extends StatelessWidget {
   const _CategoryFilters({
-    required this.selectedCategory,
+    required this.selectedLabel,
     required this.onSelected,
   });
 
-  final PantryCategory? selectedCategory;
-  final ValueChanged<PantryCategory?> onSelected;
+  final String selectedLabel;
+  final ValueChanged<String> onSelected;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 42,
+      height: 36,
       child: ListView(
         key: const ValueKey('pantry-category-list'),
         scrollDirection: Axis.horizontal,
         children: [
-          _FilterChip(
-            label: 'Tất cả',
-            selected: selectedCategory == null,
-            onTap: () => onSelected(null),
-          ),
-          for (final category in PantryCategory.values)
+          for (final label in const [
+            'Tất cả',
+            'Trái cây',
+            'Sữa',
+            'Trà & cà phê',
+            'Tạo ngọt',
+          ])
             _FilterChip(
-              label: category.label,
-              selected: selectedCategory == category,
-              onTap: () => onSelected(category),
+              label: label,
+              selected: selectedLabel == label,
+              onTap: () => onSelected(label),
             ),
         ],
       ),
@@ -416,10 +347,52 @@ class _FilterChip extends StatelessWidget {
           fontWeight: FontWeight.w600,
         ),
         selectedColor: AppColors.navy,
-        backgroundColor: AppColors.white,
+        backgroundColor: AppColors.cream,
         side: BorderSide(color: selected ? AppColors.navy : AppColors.border),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        padding: const EdgeInsets.symmetric(horizontal: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+      ),
+    );
+  }
+}
+
+class _FreshnessReminder extends StatelessWidget {
+  const _FreshnessReminder({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 36,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: AppColors.pastelPink,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.priority_high_rounded,
+            size: 15,
+            color: Color(0xFFAA4C62),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '$count nguyên liệu sắp hết hạn',
+              style: const TextStyle(
+                color: Color(0xFFAA4C62),
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          const Text(
+            'Dùng sớm',
+            style: TextStyle(color: Color(0xFFAA4C62), fontSize: 11),
+          ),
+        ],
       ),
     );
   }

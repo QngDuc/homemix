@@ -75,33 +75,33 @@ class _LearningScreenState extends ConsumerState<LearningScreen> {
     LearningProgress progress,
   ) {
     final completedCount = progress.completedLessonIds.length;
-    final startedCount = progress.inProgressLessonIds.length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _LearningSummary(
           completedCount: completedCount,
-          startedCount: startedCount,
-          courseCount: ref.read(learningCoursesProvider).length,
+          totalLessonCount: ref
+              .read(learningCoursesProvider)
+              .fold(0, (total, course) => total + course.lessons.length),
         ),
-        const SizedBox(height: 24),
-        Text('Lộ trình học', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 11),
+        const SizedBox(height: 16),
         SizedBox(
-          height: 42,
+          height: 36,
           child: ListView(
             key: const ValueKey('learning-level-list'),
             scrollDirection: Axis.horizontal,
             children: [
               _LevelFilterChip(
                 label: 'Tất cả',
+                keyLabel: 'Tất cả',
                 selected: _selectedLevel == null,
                 onTap: () => setState(() => _selectedLevel = null),
               ),
               for (final level in CourseLevel.values)
                 _LevelFilterChip(
-                  label: level.label,
+                  label: level.displayName,
+                  keyLabel: level.label,
                   selected: _selectedLevel == level,
                   onTap: () => setState(() => _selectedLevel = level),
                 ),
@@ -129,44 +129,45 @@ class _LearningHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'LEARNING',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: AppColors.coral,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.7,
-                ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Học pha chế',
+                style: Theme.of(context).textTheme.titleLarge
+                    ?.copyWith(fontSize: 23, fontWeight: FontWeight.w600),
               ),
-              const SizedBox(height: 5),
-              Text(
-                'Học pha chế, từng bước một',
-                style: Theme.of(context).textTheme.headlineMedium
-                    ?.copyWith(fontSize: 25),
+            ),
+            Text.rich(
+              const TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'home',
+                    style: TextStyle(color: AppColors.navy),
+                  ),
+                  TextSpan(
+                    text: 'mix',
+                    style: TextStyle(color: AppColors.coral),
+                  ),
+                ],
               ),
-              const SizedBox(height: 6),
-              Text(
-                'Từ những kỹ thuật đầu tiên đến công thức bạn yêu thích.',
-                style: Theme.of(context).textTheme.bodyMedium
-                    ?.copyWith(height: 1.4),
-              ),
-            ],
-          ),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+            ),
+          ],
         ),
-        const SizedBox(width: 10),
-        Container(
-          width: 48,
-          height: 48,
-          decoration: const BoxDecoration(
-            color: AppColors.pastelPink,
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.menu_book_rounded, color: AppColors.coral),
+        const SizedBox(height: 24),
+        Text(
+          'Học pha chế\nnhư chuyên gia',
+          style: Theme.of(context).textTheme.headlineMedium
+              ?.copyWith(fontSize: 26, height: 1.35),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Nâng cao kỹ năng pha chế\nqua từng bước nhỏ.',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.5),
         ),
       ],
     );
@@ -176,35 +177,61 @@ class _LearningHeader extends StatelessWidget {
 class _LearningSummary extends StatelessWidget {
   const _LearningSummary({
     required this.completedCount,
-    required this.startedCount,
-    required this.courseCount,
+    required this.totalLessonCount,
   });
 
   final int completedCount;
-  final int startedCount;
-  final int courseCount;
+  final int totalLessonCount;
 
   @override
   Widget build(BuildContext context) {
+    final percent = totalLessonCount == 0
+        ? 0
+        : (completedCount / totalLessonCount * 100).round();
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      height: 80,
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
       decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.border),
+        color: const Color(0xFFEEF4E3),
+        borderRadius: BorderRadius.circular(24),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.auto_stories_rounded, color: AppColors.coral),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Text(
-              '$courseCount lộ trình · $startedCount đang học · $completedCount bài đã hoàn thành',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.navy,
-                fontWeight: FontWeight.w600,
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Hành trình pha chế',
+                  style: Theme.of(context).textTheme.titleMedium
+                      ?.copyWith(fontSize: 16),
+                ),
               ),
+              Text(
+                '$percent%',
+                style: const TextStyle(
+                  color: Color(0xFF4B6F20),
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Đã hoàn thành $completedCount/$totalLessonCount bài',
+            style: const TextStyle(color: Color(0xFF4B6F20), fontSize: 12),
+          ),
+          const Spacer(),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: LinearProgressIndicator(
+              value: percent / 100,
+              minHeight: 4,
+              color: AppColors.green,
+              backgroundColor: const Color(0xFFDCE6CA),
             ),
           ),
         ],
@@ -216,11 +243,13 @@ class _LearningSummary extends StatelessWidget {
 class _LevelFilterChip extends StatelessWidget {
   const _LevelFilterChip({
     required this.label,
+    required this.keyLabel,
     required this.selected,
     required this.onTap,
   });
 
   final String label;
+  final String keyLabel;
   final bool selected;
   final VoidCallback onTap;
 
@@ -229,7 +258,7 @@ class _LevelFilterChip extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: ChoiceChip(
-        key: ValueKey('learning-level-$label'),
+        key: ValueKey('learning-level-$keyLabel'),
         label: Text(label),
         selected: selected,
         showCheckmark: false,

@@ -17,21 +17,20 @@ void main() {
 
     await tester.pumpWidget(const ProviderScope(child: MainApp()));
     await tester.pumpAndSettle();
-    expect(find.text('Chào bạn,'), findsOneWidget);
+    expect(find.text('Bạn muốn pha món gì hôm nay?'), findsOneWidget);
 
-    await tester.tap(find.text('Pantry').last);
+    await tester.tap(find.text('Nguyên liệu').last);
     await tester.pumpAndSettle();
-    expect(find.text('Pantry'), findsWidgets);
+    expect(find.text('Tủ nguyên liệu'), findsOneWidget);
     expect(find.text('Trà đen'), findsOneWidget);
-    expect(find.text('Còn hạn'), findsWidgets);
-    expect(find.text('Sắp hết hạn'), findsWidgets);
-    expect(find.text('Đã hết hạn'), findsOneWidget);
+    expect(find.textContaining('HSD:'), findsWidgets);
+    expect(find.textContaining('SẮP HẾT'), findsWidgets);
 
-    await tester.tap(find.text('Discover'));
+    await tester.tap(find.text('Trang chủ'));
     await tester.pumpAndSettle();
-    expect(find.text('Chào bạn,'), findsOneWidget);
+    expect(find.text('Bạn muốn pha món gì hôm nay?'), findsOneWidget);
 
-    await tester.tap(find.text('Pantry').last);
+    await tester.tap(find.text('Nguyên liệu').last);
     await tester.pumpAndSettle();
     expect(find.text('Trà đen'), findsOneWidget);
   });
@@ -44,7 +43,7 @@ void main() {
 
     await tester.pumpWidget(const ProviderScope(child: MainApp()));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Pantry').last);
+    await tester.tap(find.text('Nguyên liệu').last);
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey('pantry-add-button')));
@@ -99,7 +98,9 @@ void main() {
     await tester.tap(find.byTooltip('Xóa tìm kiếm'));
     await tester.pumpAndSettle();
     final categoryList = find.byKey(const ValueKey('pantry-category-list'));
-    await tester.drag(categoryList, const Offset(-350, 0));
+    await tester.ensureVisible(categoryList);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(categoryList);
     await tester.pumpAndSettle();
     final fruitCategory = find.byKey(
       const ValueKey('pantry-category-Trái cây'),
@@ -132,10 +133,10 @@ void main() {
 
     await tester.pumpWidget(const ProviderScope(child: MainApp()));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Pantry').last);
+    await tester.tap(find.text('Nguyên liệu').last);
     await tester.pumpAndSettle();
 
-    expect(find.text('Pantry'), findsWidgets);
+    expect(find.text('Tủ nguyên liệu'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

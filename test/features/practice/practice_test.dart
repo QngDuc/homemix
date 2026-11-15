@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:homemix/app/app.dart';
+import 'package:homemix/app/router/app_router.dart';
 import 'package:homemix/features/journal/providers/journal_providers.dart';
 
 import '../../support/journal_storage_test_setup.dart';
@@ -43,8 +44,7 @@ void main() {
 
     await tester.pumpWidget(const ProviderScope(child: MainApp()));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Practice').last);
-    await tester.pumpAndSettle();
+    await _openPractice(tester);
 
     expect(find.text('Matcha latte'), findsOneWidget);
     expect(find.text('Dâu tây sữa chua'), findsOneWidget);
@@ -175,8 +175,7 @@ void main() {
 
     await tester.pumpWidget(const ProviderScope(child: MainApp()));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Practice').last);
-    await tester.pumpAndSettle();
+    await _openPractice(tester);
 
     final recipeCard = find.byKey(
       const ValueKey('practice-recipe-matcha-latte'),
@@ -202,4 +201,12 @@ void main() {
     expect(find.text('Chọn món để bắt đầu'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+}
+
+Future<void> _openPractice(WidgetTester tester) async {
+  final container = ProviderScope.containerOf(
+    tester.element(find.byType(MainApp)),
+  );
+  container.read(appRouterProvider).go('/practice');
+  await tester.pumpAndSettle();
 }

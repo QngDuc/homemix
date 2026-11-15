@@ -19,116 +19,144 @@ class MixRecommendationCard extends StatelessWidget {
         ? const Color(0xFFB36B25)
         : const Color(0xFFC65363);
     final statusBackground = recommendation.canMakeNow
-        ? const Color(0xFFEAF2DA)
+        ? const Color(0xFFEEF4E3)
         : recommendation.matchPercentage >= 50
         ? const Color(0xFFFFF0D8)
-        : const Color(0xFFFBE4E6);
+        : const Color(0xFFFFEED7);
+    final drinkImage = switch (recipe.id) {
+      'peach-lemongrass-tea' => 'assets/images/figma/mix_honey_citrus.png',
+      'strawberry-yogurt' => 'assets/images/figma/mix_strawberry_tea.png',
+      _ => null,
+    };
 
     return Material(
       key: ValueKey('mix-recommendation-${recipe.id}'),
-      color: AppColors.white,
-      borderRadius: BorderRadius.circular(22),
+      color: recommendation.canMakeNow
+          ? AppColors.cream
+          : const Color(0xFFF9E1E5),
+      borderRadius: BorderRadius.circular(24),
       child: InkWell(
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(24),
         onTap: () => context.push('/mix-now/recipe/${recipe.id}'),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 82,
-                height: 100,
-                child: DrinkArtwork(style: recipe.artwork),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            recipe.name,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.titleMedium,
+        child: SizedBox(
+          height: recommendation.canMakeNow ? 140 : 184,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: SizedBox(
+                    width: 88,
+                    height: recommendation.canMakeNow ? 116 : 126,
+                    child: drinkImage == null
+                        ? DrinkArtwork(style: recipe.artwork)
+                        : Image.asset(drinkImage, fit: BoxFit.cover),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        recipe.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontSize: 15),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusBackground,
+                          borderRadius: BorderRadius.circular(11),
+                        ),
+                        child: Text(
+                          recommendation.canMakeNow
+                              ? 'Sẵn sàng pha'
+                              : 'Thiếu nguyên liệu',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: statusColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const Icon(
-                          Icons.chevron_right_rounded,
-                          color: AppColors.muted,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${recipe.category.label}  ·  ${recipe.minutes} phút  ·  ${recipe.difficulty}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall
-                          ?.copyWith(color: AppColors.muted),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            '${recommendation.matchPercentage}% nguyên liệu có sẵn',
-                            style: const TextStyle(
-                              color: AppColors.navy,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          '${recommendation.availableIngredientCount}/${recommendation.ingredients.length}',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 5),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: LinearProgressIndicator(
-                        value: recommendation.matchPercentage / 100,
-                        minHeight: 6,
-                        backgroundColor: AppColors.border,
-                        color: statusColor,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 9,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: statusBackground,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text(
-                        recommendation.canMakeNow
-                            ? 'Có thể pha ngay'
-                            : recommendation.status ==
-                                  RecipeMatchStatus.notEnough
-                            ? 'Chưa đủ nguyên liệu'
-                            : 'Thiếu ${recommendation.missingIngredientCount} nguyên liệu',
+                      const SizedBox(height: 7),
+                      Text(
+                        '${recommendation.availableIngredientCount}/'
+                        '${recommendation.ingredients.length} nguyên liệu · '
+                        '${recommendation.matchPercentage}%',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: statusColor,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: recommendation.matchPercentage / 100,
+                          minHeight: 4,
+                          backgroundColor: const Color(0xFFE3D6D5),
+                          color: statusColor,
+                        ),
+                      ),
+                      if (!recommendation.canMakeNow) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          'Thiếu: ${recommendation.ingredients.where((item) => !item.isAvailable).map((item) => item.recipeIngredient.name).join(', ')}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(fontSize: 10),
+                        ),
+                      ],
+                      const Spacer(),
+                      Container(
+                        height: 32,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: AppColors.navy,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              recommendation.canMakeNow
+                                  ? 'Bắt đầu pha'
+                                  : 'Xem công thức',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const Icon(
+                              Icons.arrow_forward_rounded,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

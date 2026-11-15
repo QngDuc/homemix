@@ -9,52 +9,64 @@ class HomeShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
   static const _destinations = <_NavDestination>[
-    _NavDestination('Discover', Icons.explore_rounded),
-    _NavDestination('Pantry', Icons.kitchen_rounded),
-    _NavDestination('Mix Now', Icons.blender_rounded),
-    _NavDestination('Learning', Icons.menu_book_rounded),
-    _NavDestination('Practice', Icons.local_drink_rounded),
-    _NavDestination('Journal', Icons.auto_stories_rounded),
+    _NavDestination('Trang chủ', Icons.home_outlined, 0),
+    _NavDestination('Nguyên liệu', Icons.inventory_2_outlined, 1),
+    _NavDestination('Pha ngay', Icons.local_bar_outlined, 2),
+    _NavDestination('Học pha chế', Icons.menu_book_outlined, 3),
+    _NavDestination('Nhật ký', Icons.fact_check_outlined, 5),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final location = GoRouterState.of(context).uri.path;
+    final hideNavigation =
+        location.startsWith('/discover/recipe/') ||
+        location.startsWith('/mix-now/recipe/') ||
+        location.startsWith('/learning/course/');
+
     return Scaffold(
       body: navigationShell,
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Container(
-          height: 68,
-          decoration: const BoxDecoration(
-            color: AppColors.white,
-            border: Border(top: BorderSide(color: AppColors.border)),
-          ),
-          child: Row(
-            children: [
-              for (var index = 0; index < _destinations.length; index++)
-                Expanded(
-                  child: _NavigationItem(
-                    destination: _destinations[index],
-                    selected: navigationShell.currentIndex == index,
-                    onTap: () => navigationShell.goBranch(
-                      index,
-                      initialLocation: index == navigationShell.currentIndex,
-                    ),
-                  ),
+      bottomNavigationBar: hideNavigation
+          ? null
+          : SafeArea(
+              top: false,
+              child: Container(
+                height: 68,
+                decoration: const BoxDecoration(
+                  color: AppColors.white,
+                  border: Border(top: BorderSide(color: AppColors.border)),
                 ),
-            ],
-          ),
-        ),
-      ),
+                child: Row(
+                  children: [
+                    for (var index = 0; index < _destinations.length; index++)
+                      Expanded(
+                        child: _NavigationItem(
+                          destination: _destinations[index],
+                          selected:
+                              navigationShell.currentIndex ==
+                              _destinations[index].branchIndex,
+                          onTap: () => navigationShell.goBranch(
+                            _destinations[index].branchIndex,
+                            initialLocation:
+                                _destinations[index].branchIndex ==
+                                navigationShell.currentIndex,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
     );
   }
 }
 
 class _NavDestination {
-  const _NavDestination(this.label, this.icon);
+  const _NavDestination(this.label, this.icon, this.branchIndex);
 
   final String label;
   final IconData icon;
+  final int branchIndex;
 }
 
 class _NavigationItem extends StatelessWidget {

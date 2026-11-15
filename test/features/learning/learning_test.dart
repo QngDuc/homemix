@@ -35,7 +35,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Learning').last);
+    await tester.tap(find.text('Học pha chế').last);
     await tester.pumpAndSettle();
 
     expect(find.text('Bartending cơ bản'), findsOneWidget);

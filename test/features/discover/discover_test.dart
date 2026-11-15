@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:homemix/app/app.dart';
+import 'package:homemix/app/router/app_router.dart';
 
 import '../../support/journal_storage_test_setup.dart';
 
@@ -35,6 +36,28 @@ void main() {
     expect(find.text('Nguyên liệu'), findsOneWidget);
   });
 
+  testWidgets('renders Mojito detail from a direct route', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(const ProviderScope(child: MainApp()));
+    await tester.pumpAndSettle();
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(MainApp)),
+    );
+    container
+        .read(appRouterProvider)
+        .go('/discover/recipe/non-alcoholic-mojito');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Mojito không cồn'), findsWidgets);
+    expect(find.text('Nguyên liệu'), findsOneWidget);
+    expect(find.text('4 món cần có'), findsOneWidget);
+    expect(find.byKey(const ValueKey('discover-practice-button')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('favorite action can be toggled from a recipe card', (
     tester,
   ) async {
@@ -50,10 +73,10 @@ void main() {
     await tester.tap(favoriteButton);
     await tester.pumpAndSettle();
 
-    expect(find.byTooltip('Bỏ yêu thích'), findsOneWidget);
+    expect(find.byTooltip('Bỏ yêu thích'), findsWidgets);
   });
 
-  testWidgets('fits the six-tab layout on a compact phone viewport', (
+  testWidgets('fits the five-tab layout on a compact phone viewport', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(320, 800));
@@ -62,8 +85,8 @@ void main() {
     await tester.pumpWidget(const ProviderScope(child: MainApp()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Discover'), findsOneWidget);
-    expect(find.text('Journal'), findsOneWidget);
+    expect(find.text('Trang chủ'), findsOneWidget);
+    expect(find.text('Nhật ký'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

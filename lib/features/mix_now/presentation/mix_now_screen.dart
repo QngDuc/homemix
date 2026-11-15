@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../core/widgets/feature_state.dart';
-import '../../../domain/entities/drink_recipe.dart';
 import '../../discover/providers/discover_providers.dart';
 import '../../pantry/providers/pantry_providers.dart';
 import '../domain/mix_now_matcher.dart';
@@ -21,7 +19,8 @@ class MixNowScreen extends ConsumerStatefulWidget {
 class _MixNowScreenState extends ConsumerState<MixNowScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
-  DrinkCategory? _selectedCategory;
+  String _selectedAvailability = 'Tất cả';
+  bool _showSearch = false;
 
   @override
   void dispose() {
@@ -46,18 +45,21 @@ class _MixNowScreenState extends ConsumerState<MixNowScreen> {
         ),
         data: (items) {
           final filtered = items.where((recommendation) {
-            final recipe = recommendation.recipe;
-            final matchesCategory =
-                _selectedCategory == null ||
-                recipe.category == _selectedCategory;
+            final matchesAvailability = switch (_selectedAvailability) {
+              'Pha được ngay' => recommendation.canMakeNow,
+              'Thiếu nguyên liệu' => !recommendation.canMakeNow,
+              _ => true,
+            };
             final query = MixNowMatcher.normalizeIngredientName(_searchQuery);
             final matchesQuery =
                 query.isEmpty ||
-                MixNowMatcher.normalizeIngredientName(recipe.name)
-                    .contains(query) ||
-                MixNowMatcher.normalizeIngredientName(recipe.description)
-                    .contains(query);
-            return matchesCategory && matchesQuery;
+                MixNowMatcher.normalizeIngredientName(
+                  recommendation.recipe.name,
+                ).contains(query) ||
+                MixNowMatcher.normalizeIngredientName(
+                  recommendation.recipe.description,
+                ).contains(query);
+            return matchesAvailability && matchesQuery;
           }).toList();
           final readyCount = items.where((item) => item.canMakeNow).length;
 
@@ -75,60 +77,53 @@ class _MixNowScreenState extends ConsumerState<MixNowScreen> {
                           _MixNowHeader(
                             pantryCount: pantry.length,
                             readyCount: readyCount,
+                            onSearchPressed: () =>
+                                setState(() => _showSearch = !_showSearch),
                           ),
-                          const SizedBox(height: 20),
-                          TextField(
-                            key: const ValueKey('mix-search-field'),
-                            controller: _searchController,
-                            onChanged: (value) =>
-                                setState(() => _searchQuery = value.trim()),
-                            textInputAction: TextInputAction.search,
-                            decoration: InputDecoration(
-                              hintText: 'Tìm đồ uống...',
-                              prefixIcon: const Icon(
-                                Icons.search_rounded,
-                                color: AppColors.coral,
+                          const SizedBox(height: 24),
+                          const _PossibilitiesBanner(),
+                          if (_showSearch) ...[
+                            const SizedBox(height: 12),
+                            TextField(
+                              key: const ValueKey('mix-search-field'),
+                              controller: _searchController,
+                              onChanged: (value) =>
+                                  setState(() => _searchQuery = value.trim()),
+                              textInputAction: TextInputAction.search,
+                              decoration: InputDecoration(
+                                hintText: 'Tìm đồ uống...',
+                                prefixIcon: const Icon(
+                                  Icons.search_rounded,
+                                  color: AppColors.coral,
+                                ),
+                                suffixIcon: IconButton(
+                                  tooltip: 'Xóa tìm kiếm',
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() => _searchQuery = '');
+                                  },
+                                  icon: const Icon(Icons.close_rounded),
+                                ),
                               ),
-                              suffixIcon: _searchQuery.isEmpty
-                                  ? null
-                                  : IconButton(
-                                      tooltip: 'Xóa tìm kiếm',
-                                      onPressed: () {
-                                        _searchController.clear();
-                                        setState(() => _searchQuery = '');
-                                      },
-                                      icon: const Icon(Icons.close_rounded),
-                                    ),
-                            ),
-                          ),
-                          const SizedBox(height: 19),
-                          Text(
-                            'Loại đồ uống',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 10),
-                          _DrinkCategoryFilters(
-                            selectedCategory: _selectedCategory,
-                            onSelected: (category) =>
-                                setState(() => _selectedCategory = category),
-                          ),
-                          if (pantry.isEmpty) ...[
-                            const SizedBox(height: 16),
-                            _PantryEmptyHint(
-                              onTap: () => context.go('/pantry'),
                             ),
                           ],
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 16),
+                          _AvailabilityFilters(
+                            selectedFilter: _selectedAvailability,
+                            onSelected: (filter) =>
+                                setState(() => _selectedAvailability = filter),
+                          ),
+                          const SizedBox(height: 16),
                           Row(
                             children: [
                               Expanded(
                                 child: Text(
-                                  'Gợi ý dành cho bạn',
+                                  'Gợi ý từ tủ nguyên liệu',
                                   style: Theme.of(context).textTheme.titleLarge,
                                 ),
                               ),
                               Text(
-                                '${filtered.length} món',
+                                '${filtered.length} gợi ý',
                                 style: Theme.of(context).textTheme.bodyMedium,
                               ),
                             ],
@@ -166,91 +161,106 @@ class _MixNowScreenState extends ConsumerState<MixNowScreen> {
 }
 
 class _MixNowHeader extends StatelessWidget {
-  const _MixNowHeader({required this.pantryCount, required this.readyCount});
+  const _MixNowHeader({
+    required this.pantryCount,
+    required this.readyCount,
+    required this.onSearchPressed,
+  });
 
   final int pantryCount;
   final int readyCount;
+  final VoidCallback onSearchPressed;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.pastelPink,
-        borderRadius: BorderRadius.circular(26),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'MIX NOW',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: AppColors.coral,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.4,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Pha ngay',
+                style: Theme.of(context).textTheme.titleLarge
+                    ?.copyWith(fontSize: 23, fontWeight: FontWeight.w600),
+              ),
+            ),
+            IconButton(
+              key: const ValueKey('mix-search-toggle'),
+              tooltip: 'Tìm đồ uống',
+              onPressed: onSearchPressed,
+              icon: const Icon(Icons.search_rounded),
+            ),
+            Text.rich(
+              const TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'home',
+                    style: TextStyle(color: AppColors.navy),
                   ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  'Pha ngon từ những gì bạn có',
-                  style: Theme.of(context).textTheme.titleLarge
-                      ?.copyWith(fontSize: 18),
-                ),
-                const SizedBox(height: 7),
-                Text(
-                  '$pantryCount nguyên liệu trong Pantry · $readyCount món pha ngay',
-                  style: Theme.of(context).textTheme.bodyMedium
-                      ?.copyWith(color: AppColors.navy, height: 1.4),
-                ),
-              ],
+                  TextSpan(
+                    text: 'mix',
+                    style: TextStyle(color: AppColors.coral),
+                  ),
+                ],
+              ),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Text(
+          'Hôm nay bạn\npha được gì?',
+          style: Theme.of(context).textTheme.headlineMedium
+              ?.copyWith(fontSize: 26, height: 1.35),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+          decoration: BoxDecoration(
+            color: const Color(0xFFEEF4E3),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            'Có sẵn $pantryCount nguyên liệu · $readyCount pha ngay',
+            style: const TextStyle(
+              color: Color(0xFF4B6F20),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(width: 10),
-          Container(
-            width: 54,
-            height: 54,
-            decoration: const BoxDecoration(
-              color: AppColors.white,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.blender_rounded, color: AppColors.coral),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-class _DrinkCategoryFilters extends StatelessWidget {
-  const _DrinkCategoryFilters({
-    required this.selectedCategory,
+class _AvailabilityFilters extends StatelessWidget {
+  const _AvailabilityFilters({
+    required this.selectedFilter,
     required this.onSelected,
   });
 
-  final DrinkCategory? selectedCategory;
-  final ValueChanged<DrinkCategory?> onSelected;
+  final String selectedFilter;
+  final ValueChanged<String> onSelected;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 42,
+      height: 36,
       child: ListView(
-        key: const ValueKey('mix-category-list'),
+        key: const ValueKey('mix-availability-filter-list'),
         scrollDirection: Axis.horizontal,
         children: [
-          MixCategoryChip(
-            label: 'Tất cả',
-            selected: selectedCategory == null,
-            onTap: () => onSelected(null),
-          ),
-          for (final category in DrinkCategory.values)
+          for (final label in const [
+            'Tất cả',
+            'Pha được ngay',
+            'Thiếu nguyên liệu',
+          ])
             MixCategoryChip(
-              label: category.label,
-              selected: selectedCategory == category,
-              onTap: () => onSelected(category),
+              label: label,
+              selected: selectedFilter == label,
+              onTap: () => onSelected(label),
             ),
         ],
       ),
@@ -258,35 +268,49 @@ class _DrinkCategoryFilters extends StatelessWidget {
   }
 }
 
-class _PantryEmptyHint extends StatelessWidget {
-  const _PantryEmptyHint({required this.onTap});
-
-  final VoidCallback onTap;
+class _PossibilitiesBanner extends StatelessWidget {
+  const _PossibilitiesBanner();
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.white,
-      borderRadius: BorderRadius.circular(18),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              const Icon(Icons.kitchen_rounded, color: AppColors.coral),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Thêm nguyên liệu vào Pantry để nhận gợi ý chính xác hơn.',
-                  style: Theme.of(context).textTheme.bodyMedium,
+    return Container(
+      height: 96,
+      padding: const EdgeInsets.fromLTRB(16, 14, 12, 12),
+      decoration: BoxDecoration(
+        color: AppColors.pastelPink,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        children: [
+          const Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Nguyên liệu sẵn có,\nvô vàn cách pha!',
+                  style: TextStyle(
+                    color: AppColors.navy,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    height: 1.25,
+                  ),
                 ),
-              ),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.muted),
-            ],
+                SizedBox(height: 5),
+                Text(
+                  'Ít mua sắm, thêm niềm vui.',
+                  style: TextStyle(color: Color(0xFFAA4C62), fontSize: 11),
+                ),
+              ],
+            ),
           ),
-        ),
+          Image.asset(
+            'assets/images/onboarding_cocktail.png',
+            width: 76,
+            height: 76,
+            fit: BoxFit.contain,
+          ),
+        ],
       ),
     );
   }

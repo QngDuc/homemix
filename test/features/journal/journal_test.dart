@@ -87,7 +87,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Journal').last);
+    await tester.tap(find.text('Nhật ký').last);
     await tester.pumpAndSettle();
 
     expect(find.text('Trà đào cam sả'), findsOneWidget);
@@ -155,7 +155,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.arrow_back_rounded).first);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Journal').last);
+    await tester.tap(find.text('Nhật ký').last);
     await tester.pumpAndSettle();
     await tester.tap(find.textContaining('Yêu thích'));
     await tester.pumpAndSettle();

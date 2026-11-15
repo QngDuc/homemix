@@ -5,7 +5,6 @@ import '../../../app/theme/app_colors.dart';
 import '../domain/learning_course.dart';
 import '../domain/learning_progress.dart';
 import 'course_artwork.dart';
-import 'learning_progress_bar.dart';
 
 class LearningCourseCard extends StatelessWidget {
   const LearningCourseCard({
@@ -21,76 +20,119 @@ class LearningCourseCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final completed = progress.completedCountFor(course);
     final percent = progress.percentFor(course);
+    final cardColor = switch (course.artwork) {
+      CourseArtworkType.bartending => const Color(0xFFEEF4E3),
+      CourseArtworkType.fruitTea => AppColors.cream,
+      CourseArtworkType.coffee => const Color(0xFFF9E1E5),
+    };
 
     return Material(
-      color: AppColors.white,
+      color: cardColor,
       borderRadius: BorderRadius.circular(24),
       child: InkWell(
         key: ValueKey('learning-course-${course.id}'),
         borderRadius: BorderRadius.circular(24),
         onTap: () => context.push('/learning/course/${course.id}'),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Stack(
-                children: [
-                  CourseArtwork(artwork: course.artwork, height: 132),
-                  Positioned(
-                    top: 10,
-                    left: 10,
-                    child: _LevelBadge(level: course.level),
+        child: SizedBox(
+          height: 124,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 96,
+                  height: 100,
+                  child: CourseArtwork(artwork: course.artwork, height: 100),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        course.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontSize: 14, height: 1.1),
+                      ),
+                      Text(
+                        '${course.level.displayName} · '
+                        '${course.lessons.length} bài · '
+                        '${_formatDuration(course.totalMinutes)}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.muted,
+                          fontSize: 10,
+                          height: 1.1,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '$completed/${course.lessons.length} bài',
+                              style: const TextStyle(
+                                color: Color(0xFF4B6F20),
+                                fontSize: 10,
+                                height: 1.1,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '$percent%',
+                            style: const TextStyle(
+                              color: Color(0xFF4B6F20),
+                              fontSize: 10,
+                              height: 1.1,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(3),
+                        child: LinearProgressIndicator(
+                          value: percent / 100,
+                          minHeight: 4,
+                          color: AppColors.green,
+                          backgroundColor: const Color(0xFFDCE6CA),
+                        ),
+                      ),
+                      Container(
+                        height: 26,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: AppColors.navy,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Tiếp tục học',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Icon(
+                              Icons.arrow_forward_rounded,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 13),
-              Text(
-                course.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 5),
-              Text(
-                course.description,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium
-                    ?.copyWith(height: 1.4),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.menu_book_rounded,
-                    size: 15,
-                    color: AppColors.muted,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${course.lessons.length} bài',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(width: 13),
-                  const Icon(
-                    Icons.schedule_rounded,
-                    size: 15,
-                    color: AppColors.muted,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _formatDuration(course.totalMinutes),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              LearningProgressBar(
-                progress: percent / 100,
-                label: '$completed/${course.lessons.length} bài đã hoàn thành',
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -13,65 +13,85 @@ class RecipeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final surface = recipe.artwork == DrinkArtworkStyle.strawberryYogurt
+        ? const Color(0xFFF9E1E5)
+        : AppColors.cream;
+
     return Material(
-      color: AppColors.white,
+      color: surface,
       borderRadius: BorderRadius.circular(24),
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
         onTap: () => context.push('/discover/recipe/${recipe.id}'),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
+              SizedBox(
+                height: 124,
+                width: double.infinity,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
                     DrinkArtwork(style: recipe.artwork),
                     Positioned(
-                      top: 10,
-                      left: 10,
-                      child: _CategoryBadge(label: recipe.category.label),
-                    ),
-                    Positioned(
-                      top: 7,
-                      right: 7,
-                      child: FavoriteRecipeButton(recipeId: recipe.id),
+                      top: 5,
+                      right: 5,
+                      child: FavoriteRecipeButton(
+                        recipeId: recipe.id,
+                        backgroundColor: AppColors.white,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 4),
               Text(
                 recipe.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
-              const SizedBox(height: 5),
-              Row(
+              const SizedBox(height: 3),
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 6,
                 children: [
-                  const Icon(
-                    Icons.schedule_rounded,
-                    size: 15,
-                    color: AppColors.muted,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.schedule_rounded,
+                        size: 13,
+                        color: AppColors.muted,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        '${recipe.minutes} phút',
+                        style: Theme.of(context).textTheme.bodySmall
+                            ?.copyWith(color: AppColors.muted, fontSize: 11),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${recipe.minutes} phút',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(width: 12),
-                  const Icon(
-                    Icons.signal_cellular_alt_rounded,
-                    size: 15,
-                    color: AppColors.muted,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    recipe.difficulty,
-                    style: Theme.of(context).textTheme.bodyMedium,
+                  Container(
+                    width: 48,
+                    height: 24,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEEF4E3),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      recipe.difficulty,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF4B6F20),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -85,15 +105,6 @@ class RecipeCard extends StatelessWidget {
 
 class RecipeCategoryBadge extends StatelessWidget {
   const RecipeCategoryBadge({required this.label, super.key});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) => _CategoryBadge(label: label);
-}
-
-class _CategoryBadge extends StatelessWidget {
-  const _CategoryBadge({required this.label});
 
   final String label;
 

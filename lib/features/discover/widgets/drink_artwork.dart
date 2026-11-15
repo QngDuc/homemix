@@ -12,6 +12,14 @@ class DrinkArtwork extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = _paletteFor(style);
+    final imagePath = switch (style) {
+      DrinkArtworkStyle.mojito => 'assets/images/figma/discover_mojito.png',
+      DrinkArtworkStyle.latte => 'assets/images/figma/discover_coffee.png',
+      DrinkArtworkStyle.peachTea => 'assets/images/figma/mix_honey_citrus.png',
+      DrinkArtworkStyle.strawberryYogurt =>
+        'assets/images/figma/discover_strawberry_drink.png',
+      _ => null,
+    };
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -20,51 +28,53 @@ class DrinkArtwork extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(22),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Positioned(
-              top: 14,
-              right: 18,
-              child: _Circle(
-                color: palette.accent.withValues(alpha: 0.15),
-                size: 54,
-              ),
-            ),
-            Positioned(
-              left: 18,
-              bottom: 14,
-              child: _Circle(
-                color: palette.accent.withValues(alpha: 0.12),
-                size: 34,
-              ),
-            ),
-            CustomPaint(
-              size: Size.infinite,
-              painter: _GlassPainter(palette: palette),
-            ),
-            Positioned(
-              top: 26,
-              right: 28,
-              child: Transform.rotate(
-                angle: -0.5,
-                child: Container(
-                  width: 7,
-                  height: 54,
-                  decoration: BoxDecoration(
-                    color: palette.straw,
-                    borderRadius: BorderRadius.circular(8),
+        child: imagePath != null
+            ? Image.asset(imagePath, fit: BoxFit.cover)
+            : Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned(
+                    top: 14,
+                    right: 18,
+                    child: _Circle(
+                      color: palette.accent.withValues(alpha: 0.15),
+                      size: 54,
+                    ),
                   ),
-                ),
+                  Positioned(
+                    left: 18,
+                    bottom: 14,
+                    child: _Circle(
+                      color: palette.accent.withValues(alpha: 0.12),
+                      size: 34,
+                    ),
+                  ),
+                  CustomPaint(
+                    size: Size.infinite,
+                    painter: _GlassPainter(palette: palette),
+                  ),
+                  Positioned(
+                    top: 26,
+                    right: 28,
+                    child: Transform.rotate(
+                      angle: -0.5,
+                      child: Container(
+                        width: 7,
+                        height: 54,
+                        decoration: BoxDecoration(
+                          color: palette.straw,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 38,
+                    right: 26,
+                    child: _Circle(color: palette.garnish, size: 28),
+                  ),
+                ],
               ),
-            ),
-            Positioned(
-              top: 38,
-              right: 26,
-              child: _Circle(color: palette.garnish, size: 28),
-            ),
-          ],
-        ),
       ),
     );
   }
