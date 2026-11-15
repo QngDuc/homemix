@@ -128,6 +128,7 @@ class RecipeDetailScreen extends ConsumerWidget {
       bottomNavigationBar: SafeArea(
         top: false,
         child: Center(
+          heightFactor: 1,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 393),
             child: Padding(
